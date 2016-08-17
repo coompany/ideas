@@ -1,0 +1,7 @@
+firstName = First Name
+lastName = Last Name
+email = E-mail
+password = Password
+submit = Submit
+
+error.userExists = User already exists
