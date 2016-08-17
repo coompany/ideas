@@ -25,7 +25,7 @@ import utils.auth.{CookieEnv, DefaultEnv}
 class Module extends AbstractModule with ScalaModule {
 
     override def configure() = {
-        bind(classOf[Clock]).toInstance(Clock())
+        bind[Clock].toInstance(Clock())
         bind[EventBus].toInstance(EventBus())
         bind[Silhouette[DefaultEnv]].to[SilhouetteProvider[DefaultEnv]]
         bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
@@ -89,6 +89,11 @@ class Module extends AbstractModule with ScalaModule {
                                   openIDInfoDAO: DelegableAuthInfoDAO[OpenIDInfo]): AuthInfoRepository = {
 
         new DelegableAuthInfoRepository(passwordInfoDAO, oauth1InfoDAO, oauth2InfoDAO, openIDInfoDAO)
+    }
+
+    @Provides
+    def providePasswordHasherRegistry(passwordHasher: PasswordHasher): PasswordHasherRegistry = {
+        PasswordHasherRegistry(passwordHasher)
     }
 
 }

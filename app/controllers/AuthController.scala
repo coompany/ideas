@@ -1,29 +1,40 @@
 package controllers
 
-import com.google.inject.Inject
+import javax.inject.{Inject, Singleton}
+
+import com.mohiva.play.silhouette.api.Authenticator.Implicits._
 import com.mohiva.play.silhouette.api.actions.UserAwareRequest
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
-import com.mohiva.play.silhouette.api.util.PasswordHasher
+import com.mohiva.play.silhouette.api.util.{Clock, Credentials, PasswordHasher}
 import com.mohiva.play.silhouette.api.{LoginEvent, LoginInfo, SignUpEvent, Silhouette}
+import com.mohiva.play.silhouette.impl.exceptions.IdentityNotFoundException
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import models.User
+import models.services.UserService
+import net.ceedubs.ficus.Ficus._
+import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, Messages, MessagesApi}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.{Controller, Result}
-import models.services.UserService
 import utils.auth.DefaultEnv
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 
+@Singleton
 class AuthController @Inject() (
     silhouette: Silhouette[DefaultEnv],
     val messagesApi: MessagesApi,
     userService: UserService,
     passwordHasher: PasswordHasher,
-    authInfoRepository: AuthInfoRepository) extends Controller with I18nSupport {
+    authInfoRepository: AuthInfoRepository,
+    credentialsProvider: CredentialsProvider,
+    configuration: Configuration,
+    clock: Clock) extends Controller with I18nSupport {
 
     def getSignUp = silhouette.UserAwareAction.async { implicit request =>
         redirectIfLoggedIn(request, Future.successful(Ok(views.html.signUp(SignUpForm.form))))
@@ -60,6 +71,44 @@ class AuthController @Inject() (
                                 silhouette.env.eventBus.publish(LoginEvent(user, request))
                                 result
                             }
+                    }
+                }
+            )
+        })
+    }
+
+    def getSignIn = silhouette.UserAwareAction.async { implicit request =>
+        redirectIfLoggedIn(request, Future.successful(Ok(views.html.signIn(SignInForm.form))))
+    }
+
+    def postSignIn = silhouette.UserAwareAction.async { implicit request =>
+        redirectIfLoggedIn(request, {
+            SignInForm.form.bindFromRequest.fold(
+                formWithErrors =>
+                    Future.successful(BadRequest(views.html.signIn(formWithErrors))),
+                loginData => {
+                    val credentials = Credentials(loginData.email, loginData.password)
+                    credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
+                        val result = Redirect(routes.HomeController.index())
+                        userService.retrieve(loginInfo).flatMap {
+                            case Some(user) =>
+                                val c = configuration.underlying
+                                silhouette.env.authenticatorService.create(loginInfo).map {
+                                    case authenticator if loginData.rememberMe =>
+                                        authenticator.copy(
+                                            expirationDateTime = clock.now + c.as[FiniteDuration]("silhouette.authenticator.rememberMe.authenticatorExpiry"),
+                                            idleTimeout = c.getAs[FiniteDuration]("silhouette.authenticator.rememberMe.authenticatorIdleTimeout"),
+                                            cookieMaxAge = c.getAs[FiniteDuration]("silhouette.authenticator.rememberMe.cookieMaxAge")
+                                        )
+                                    case authenticator => authenticator
+                                }.flatMap { authenticator =>
+                                    silhouette.env.eventBus.publish(LoginEvent(user, request))
+                                    silhouette.env.authenticatorService.init(authenticator).flatMap { v =>
+                                        silhouette.env.authenticatorService.embed(v, result)
+                                    }
+                                }
+                            case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
+                        }
                     }
                 }
             )

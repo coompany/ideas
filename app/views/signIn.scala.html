@@ -1,0 +1,51 @@
+@(form: Form[SignInForm.Data])(implicit request: RequestHeader, messages: Messages)
+
+@main(Messages("signIn.title")) {
+
+    @request.flash.get("error").map { msg =>
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3 alert alert-danger alert-error">
+                <a href="#" class="close" data-dismiss="alert">&times;</a>
+                <strong>@Messages("error")</strong> @msg
+            </div>
+        </div>
+    }
+
+    @if(form.errors.nonEmpty) {
+        <div class="row">
+            <div class="col-xs-12 alert alert-danger">
+                <a href="#" class="close" data-dismiss="alert">&times;</a>
+                @form.errors.map { error =>
+                    <strong>@Messages(error.key)</strong><br />
+                    @error.messages.map(Messages(_)).mkString("<br />")
+                    <br />
+                }
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-xs-12">
+            @helper.form(action = routes.AuthController.postSignIn(), args = 'class -> "form-horizontal") {
+                <div class="form-group">
+                    <label class="col-xs-4 control-label">@Messages("email")</label>
+                    <div class="col-xs-8">
+                    @helpers.inputText(form("email"), 'class -> "form-control")
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-xs-4 control-label">@Messages("password")</label>
+                    <div class="col-xs-8">
+                    @helpers.inputText(form("password"), 'class -> "form-control")
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-xs-8 col-xs-offset-4">
+                        <button type="submit" class="btn btn-default">@Messages("submit")</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+}

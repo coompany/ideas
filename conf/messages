@@ -4,4 +4,6 @@ email = E-mail
 password = Password
 submit = Submit
 
+signIn.title = Sign in page
+
 error.userExists = User already exists

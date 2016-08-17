@@ -6,6 +6,8 @@ GET     /                           controllers.HomeController.index
 
 GET     /signup                     controllers.AuthController.getSignUp
 POST    /signup                     controllers.AuthController.postSignUp
+GET     /signin                     controllers.AuthController.getSignIn
+POST    /signin                     controllers.AuthController.postSignIn
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
