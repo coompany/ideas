@@ -1,4 +1,4 @@
-/// <reference path="../../../typings/main.d.ts" />
+/// <reference path="../../../typings/index.d.ts" />
 
 module app.demo {
 
@@ -6,9 +6,7 @@ module app.demo {
 
     export interface IDemoCtrl {}
     export class DemoCtrl implements IDemoCtrl {
-        constructor(
-            public $scope: ng.IScope
-        ){}
+        constructor(public $scope: ng.IScope) {}
     }
 
     export interface IDemoService {
@@ -20,10 +18,10 @@ module app.demo {
 
     angular
         .module('app.demo', [])
-        .directive("demo", function(): ng.IDirective {
+        .directive("demo", function (): ng.IDirective {
             return {
                 templateUrl: 'app-templates/demo/demo.html',
-                controller:  DemoCtrl,
+                controller: DemoCtrl,
                 controllerAs: 'demoCtrlVM'
             };
         })
