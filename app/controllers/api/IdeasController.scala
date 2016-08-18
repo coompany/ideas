@@ -2,17 +2,14 @@ package controllers.api
 
 import javax.inject.{Inject, Singleton}
 
-import com.mohiva.play.silhouette.api.Silhouette
+import auth.OAuthDataHandler
 import com.mohiva.play.silhouette.api.util.Clock
 import models.Idea
-import models.Idea._
 import models.services.IdeaService
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
-import utils.auth.DefaultEnv
 
 import scala.concurrent.Future
 
@@ -20,17 +17,19 @@ import scala.concurrent.Future
 @Singleton
 class IdeasController @Inject() (
     ideaService: IdeaService,
-    silhouette: Silhouette[DefaultEnv],
+    dataHandler: OAuthDataHandler,
     clock: Clock) extends Controller {
 
-    def index = Action.async { implicit request =>
+    import scalaoauth2.provider.OAuth2ProviderActionBuilders._
+
+    def index = AuthorizedAction(dataHandler).async { implicit request =>
         ideaService.getAll map { allIdeas =>
             val jsonAll = Json.toJson(allIdeas)
             Ok(jsonAll)
         }
     }
 
-    def create = silhouette.SecuredAction.async { implicit request =>
+    def create = AuthorizedAction(dataHandler).async { implicit request =>
         request.body.asJson match {
             case Some(json) =>
                 CreateIdeaRequest.form.bind(json).fold(
@@ -43,7 +42,7 @@ class IdeasController @Inject() (
                             id = 0,
                             description = ideaData.description,
                             createdAt = clock.now,
-                            creator = request.identity
+                            creator = request.authInfo.user
                         )
                         ideaService.save(idea) map { idea =>
                             Ok(Json.toJson(idea))

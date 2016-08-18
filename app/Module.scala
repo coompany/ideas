@@ -1,5 +1,7 @@
+import java.security.SecureRandom
 import javax.inject.Named
 
+import auth._
 import com.google.inject.{AbstractModule, Provides}
 import com.mohiva.play.silhouette.api.crypto.{CookieSigner, Crypter, CrypterAuthenticatorEncoder}
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
@@ -13,8 +15,9 @@ import com.mohiva.play.silhouette.impl.util.{DefaultFingerprintGenerator, Secure
 import com.mohiva.play.silhouette.password.BCryptPasswordHasher
 import com.mohiva.play.silhouette.persistence.daos.{DelegableAuthInfoDAO, InMemoryAuthInfoDAO}
 import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepository
-import models.daos.{IdeaDAO, UserDAO}
-import models.daos.impl.{SlickIdeaDAO, SlickUserDAO}
+import models.User
+import models.daos.impl.{SlickAccessTokenDAO, SlickIdeaDAO, SlickUserDAO}
+import models.daos.{AccessTokenDAO, IdeaDAO, UserDAO}
 import models.services.impl.{IdeaServiceImpl, UserServiceImpl}
 import models.services.{IdeaService, UserService}
 import net.ceedubs.ficus.Ficus._
@@ -22,7 +25,8 @@ import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Configuration
 import play.api.libs.concurrent.Execution.Implicits._
-import utils.auth.{CookieEnv, DefaultEnv}
+
+import scalaoauth2.provider.TokenEndpoint
 
 
 class Module extends AbstractModule with ScalaModule {
@@ -35,6 +39,8 @@ class Module extends AbstractModule with ScalaModule {
         bind[IDGenerator].toInstance(new SecureRandomIDGenerator())
         bind[PasswordHasher].toInstance(new BCryptPasswordHasher)
 
+        bind[SecureRandom].toInstance(new SecureRandom())
+
         // Replace this with the bindings to your concrete DAOs
         bind[DelegableAuthInfoDAO[PasswordInfo]].toInstance(new InMemoryAuthInfoDAO[PasswordInfo])
         bind[DelegableAuthInfoDAO[OAuth1Info]].toInstance(new InMemoryAuthInfoDAO[OAuth1Info])
@@ -43,9 +49,15 @@ class Module extends AbstractModule with ScalaModule {
 
         bind[UserDAO].to[SlickUserDAO]
         bind[IdeaDAO].to[SlickIdeaDAO]
+        bind[AccessTokenDAO].to[SlickAccessTokenDAO]
 
         bind[UserService].to[UserServiceImpl]
         bind[IdeaService].to[IdeaServiceImpl]
+
+        bind[TokenEndpoint].to[ApiTokenEndpoint]
+        bind[OAuthDataHandler].to[OAuthDataHandlerImpl]
+
+        bind[Option[User]].toInstance(None)
     }
 
     @Provides

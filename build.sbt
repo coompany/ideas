@@ -19,6 +19,7 @@ libraryDependencies ++= webJars ++ Seq(
     "com.typesafe.play" %% "play-slick" % "2.0.2",
     "com.typesafe.play" %% "play-slick-evolutions" % "2.0.2",
     "org.postgresql" % "postgresql" % "9.4.1208",
+    "com.nulab-inc" %% "play2-oauth2-provider" % "0.18.0",
     "net.codingwell" %% "scala-guice" % "4.0.1",
     "com.iheart" %% "ficus" % "1.2.6",
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test

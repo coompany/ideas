@@ -37,11 +37,18 @@ class SlickIdeaDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProv
             createdAt = new Timestamp(idea.createdAt.getMillis)
         )
 
-        val action = for (
-            idea <- (IdeasQuery returning IdeasQuery).insertOrUpdate(dbIdea)
-        ) yield idea
+        val selectCreator = UsersQuery.filter(_.id === idea.creator.id)
 
-        db.run(action).map(_ => idea)
+        val insIdea = (IdeasQuery returning IdeasQuery.map(_.id) into ((idea, id) => idea.copy(id = id))).insertOrUpdate(dbIdea)
+
+        val actions = for {
+            user <- selectCreator.result.head
+            idea <- insIdea
+        } yield (user, idea)
+
+        db.run(actions) map {
+            case (user, newIdea) => dbIdeaToIdea(newIdea.get, user)
+        }
     }
 
 }

@@ -9,6 +9,8 @@ POST    /signup                     controllers.AuthController.postSignUp
 GET     /signin                     controllers.AuthController.getSignIn
 POST    /signin                     controllers.AuthController.postSignIn
 
+GET     /oauth2/access_token        controllers.OAuth2Controller.accessToken
+
 GET     /api/ideas                  controllers.api.IdeasController.index
 POST    /api/ideas                  controllers.api.IdeasController.create
 

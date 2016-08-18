@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
+import auth.DefaultEnv
 import com.mohiva.play.silhouette.api.Authenticator.Implicits._
 import com.mohiva.play.silhouette.api.actions.UserAwareRequest
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
@@ -18,7 +19,6 @@ import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, Messages, MessagesApi}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.{Controller, Result}
-import utils.auth.DefaultEnv
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
