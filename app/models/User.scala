@@ -1,10 +1,9 @@
 package models
 
-import com.mohiva.play.silhouette.api.{Identity, LoginInfo}
+import com.mohiva.play.silhouette.api.Identity
 
 
 case class User(id: Long,
-                loginInfo: LoginInfo,
                 firstName: String,
                 lastName: String,
                 email: String) extends Identity

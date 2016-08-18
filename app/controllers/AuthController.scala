@@ -56,7 +56,6 @@ class AuthController @Inject() (
                                 id = 0,
                                 firstName = userData.firstName,
                                 lastName = userData.lastName,
-                                loginInfo = loginInfo,
                                 email = userData.email
                             )
 

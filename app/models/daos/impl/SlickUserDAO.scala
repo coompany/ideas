@@ -3,7 +3,6 @@ package models.daos.impl
 import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.LoginInfo
-import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import models.User
 import models.daos.UserDAO
 import play.api.db.slick.DatabaseConfigProvider
@@ -12,8 +11,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import scala.concurrent.Future
 
 
-class SlickUserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
-    extends UserDAO with SlickUserTableDefinition {
+class SlickUserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends UserDAO with SlickDAO {
 
     import driver.api._
 
@@ -25,47 +23,16 @@ class SlickUserDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProv
 
     private def headOptionUser(query: Query[UsersTable, UsersTable#TableElementType, Seq]): Future[Option[User]] =
         db.run(query.result.headOption) map {
-            case Some(user) => Some(
-                User(id = user.id,
-                    firstName = user.firstName,
-                    lastName = user.lastName,
-                    email = user.email,
-                    loginInfo = LoginInfo(CredentialsProvider.ID, user.email))
-                )
+            case Some(user) => Some(user)
             case _ => None
         }
 
     override def save(user: User): Future[User] = {
-        val dbUser = DBUser(
-            id = user.id,
-            firstName = user.firstName,
-            lastName = user.lastName,
-            email = user.email)
-
         val actions = for (
-            user <- (UsersQuery returning UsersQuery).insertOrUpdate(dbUser)
+            user <- (UsersQuery returning UsersQuery).insertOrUpdate(user)
         ) yield user
 
         db.run(actions).map(_ => user)
     }
-
-}
-
-
-trait SlickUserTableDefinition extends SlickDAO {
-
-    import driver.api._
-
-    case class DBUser(id: Long, firstName: String, lastName: String, email: String)
-
-    protected class UsersTable(tag: Tag) extends Table[DBUser](tag, "user") {
-        def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
-        def firstName = column[String]("first_name")
-        def lastName = column[String]("last_name")
-        def email = column[String]("email")
-        override def * = (id, firstName, lastName, email) <> (DBUser.tupled, DBUser.unapply)
-    }
-
-    val UsersQuery = TableQuery[UsersTable]
 
 }

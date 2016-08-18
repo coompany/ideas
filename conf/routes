@@ -9,5 +9,8 @@ POST    /signup                     controllers.AuthController.postSignUp
 GET     /signin                     controllers.AuthController.getSignIn
 POST    /signin                     controllers.AuthController.postSignIn
 
+GET     /api/ideas                  controllers.api.IdeasController.index
+POST    /api/ideas                  controllers.api.IdeasController.create
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

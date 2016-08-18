@@ -13,8 +13,8 @@ import com.mohiva.play.silhouette.impl.util.{DefaultFingerprintGenerator, Secure
 import com.mohiva.play.silhouette.password.BCryptPasswordHasher
 import com.mohiva.play.silhouette.persistence.daos.{DelegableAuthInfoDAO, InMemoryAuthInfoDAO}
 import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepository
-import models.daos.UserDAO
-import models.daos.impl.SlickUserDAO
+import models.daos.{IdeaDAO, UserDAO}
+import models.daos.impl.{SlickIdeaDAO, SlickUserDAO}
 import models.services.impl.{IdeaServiceImpl, UserServiceImpl}
 import models.services.{IdeaService, UserService}
 import net.ceedubs.ficus.Ficus._
@@ -42,8 +42,10 @@ class Module extends AbstractModule with ScalaModule {
         bind[DelegableAuthInfoDAO[OpenIDInfo]].toInstance(new InMemoryAuthInfoDAO[OpenIDInfo])
 
         bind[UserDAO].to[SlickUserDAO]
+        bind[IdeaDAO].to[SlickIdeaDAO]
 
         bind[UserService].to[UserServiceImpl]
+        bind[IdeaService].to[IdeaServiceImpl]
     }
 
     @Provides
