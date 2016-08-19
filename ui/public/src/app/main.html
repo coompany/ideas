@@ -15,7 +15,9 @@
                 <li><a>Something</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a>Login</a></li>
+                <li ng-if="app.token == null">
+                    <a ng-href="{{ app.loginUrl }}">Login</a>
+                </li>
             </ul>
         </div>
     </div>
