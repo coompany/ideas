@@ -16,7 +16,7 @@ import com.mohiva.play.silhouette.password.BCryptPasswordHasher
 import com.mohiva.play.silhouette.persistence.daos.{DelegableAuthInfoDAO, InMemoryAuthInfoDAO}
 import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepository
 import models.User
-import models.daos.impl.{SlickAccessTokenDAO, SlickIdeaDAO, SlickUserDAO}
+import models.daos.impl.{SlickAccessTokenDAO, SlickIdeaDAO, SlickPasswordInfoDAO, SlickUserDAO}
 import models.daos.{AccessTokenDAO, IdeaDAO, UserDAO}
 import models.services.impl.{IdeaServiceImpl, UserServiceImpl}
 import models.services.{IdeaService, UserService}
@@ -42,7 +42,7 @@ class Module extends AbstractModule with ScalaModule {
         bind[SecureRandom].toInstance(new SecureRandom())
 
         // Replace this with the bindings to your concrete DAOs
-        bind[DelegableAuthInfoDAO[PasswordInfo]].toInstance(new InMemoryAuthInfoDAO[PasswordInfo])
+        bind[DelegableAuthInfoDAO[PasswordInfo]].to[SlickPasswordInfoDAO]
         bind[DelegableAuthInfoDAO[OAuth1Info]].toInstance(new InMemoryAuthInfoDAO[OAuth1Info])
         bind[DelegableAuthInfoDAO[OAuth2Info]].toInstance(new InMemoryAuthInfoDAO[OAuth2Info])
         bind[DelegableAuthInfoDAO[OpenIDInfo]].toInstance(new InMemoryAuthInfoDAO[OpenIDInfo])

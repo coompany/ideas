@@ -2,6 +2,7 @@ package models.daos.impl
 
 import java.sql.Timestamp
 
+import com.mohiva.play.silhouette.api.util.PasswordInfo
 import models.{Idea, User}
 import org.joda.time.DateTime
 import play.api.db.slick.HasDatabaseConfigProvider
@@ -69,6 +70,22 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
 
 
 
+    // PasswordInfo table
+    case class DBPasswordInfo(id: Long, hasher: String, password: String, salt: Option[String], userId: Long)
+
+    protected class PasswordInfoTable(tag: Tag) extends Table[DBPasswordInfo](tag, "password_info") {
+        def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+        def hasher = column[String]("hasher")
+        def password = column[String]("password")
+        def salt = column[Option[String]]("salt")
+        def userId = column[Long]("user_id")
+        override def * = (id, hasher, password, salt, userId) <> (DBPasswordInfo.tupled, DBPasswordInfo.unapply)
+    }
+
+    val PasswordInfoQuery = TableQuery[PasswordInfoTable]
+
+
+
     // Implicit conversions
     implicit def dbUserToUser(dbUser: DBUser): User = User(
         id = dbUser.id,
@@ -99,5 +116,18 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
         creator = user,
         createdAt = new DateTime(dbIdea.createdAt)
     )
+
+    implicit def dbPasswordInfoToPasswordInfo(dbPasswordInfo: DBPasswordInfo): PasswordInfo = PasswordInfo(
+        hasher = dbPasswordInfo.hasher,
+        password = dbPasswordInfo.password,
+        salt = dbPasswordInfo.salt
+    )
+
+
+
+    // common queries
+    protected def findUserByEmail(email: String) = UsersQuery.filter(_.email === email).result.headOption
+
+    protected def findPasswordInfoByUserId(userId: Long) = PasswordInfoQuery.filter(_.userId === userId).result.headOption
 
 }
