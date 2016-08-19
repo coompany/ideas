@@ -8,7 +8,7 @@ root = true
 end_of_line = lf
 insert_final_newline = true
 
-[*.{scala,sbt,ts,scss,html,js}]
+[*.{scala,sbt,ts,scss,less,html,js}]
 indent_style = space
 indent_size = 4
 

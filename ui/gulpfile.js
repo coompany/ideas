@@ -5,6 +5,7 @@ var inject        = require('gulp-inject');
 var concat        = require('gulp-concat');
 var concatCss     = require('gulp-concat-css');
 var cssNano       = require('gulp-cssnano');
+var less          = require('gulp-less');
 var rename        = require('gulp-rename');
 var sourceMaps    = require('gulp-sourcemaps');
 var templateCache = require('gulp-angular-templatecache');
@@ -41,20 +42,26 @@ gulp.task('scripts', function () {
         .pipe(gulp.dest('public/dist'));
 });
 
-// Compile, concat & minify sass
+// Compile, concat & minify sass / less
 gulp.task('sass', function () {
     return gulp.src('public/src/**/*.scss')
         .pipe(sass().on('error', sass.logError))
         .pipe(gulp.dest('public/dist/css'));
 });
 
-gulp.task('concatCss', ['sass'], function () {
+gulp.task('less', function () {
+    return gulp.src('public/src/**/*.less')
+        .pipe(less())
+        .pipe(gulp.dest('public/dist/css'))
+});
+
+gulp.task('concatCss', ['less'], function () {
     return gulp.src('public/dist/css/**/*.css')
         .pipe(concatCss("app.css"))
         .pipe(gulp.dest('public/dist'))
 });
 
-gulp.task('cssNano', ['sass', 'concatCss'], function () {
+gulp.task('cssNano', ['less', 'concatCss'], function () {
     return gulp.src('public/dist/app.css')
         .pipe(cssNano())
         .pipe(rename({suffix: '.min'}))
@@ -93,10 +100,10 @@ gulp.task('serve', ['scripts', 'cssNano', 'inject'], function () {
     var options = {
         restartable: "rs",
         verbose: true,
-        ext: "ts html scss",
+        ext: "ts html less",
         script: 'server.js',
         delayTime: 1,
-        watch: ['public/src/**/*(*.ts|*.html)', 'public/src/**/*.scss'],
+        watch: ['public/src/**/*(*.ts|*.html)', 'public/src/**/*.less'],
         env: {
             'PORT': 3000
         },
@@ -109,9 +116,8 @@ gulp.task('serve', ['scripts', 'cssNano', 'inject'], function () {
                 if (ext === '.ts' || ext === '.html') {
                     tasks.push('lint');
                     tasks.push('scripts');
-                }
-                else if (ext === '.scss') {
-                    tasks.push('sass');
+                } else if (ext === '.less') {
+                    tasks.push('less');
                     tasks.push('concatCss');
                     tasks.push('cssNano');
                 }
@@ -127,7 +133,7 @@ gulp.task('serve', ['scripts', 'cssNano', 'inject'], function () {
 });
 
 // Default Task
-gulp.task('default', ['lint', 'scripts', 'sass', 'concatCss', 'cssNano', 'inject', 'serve']);
+gulp.task('default', ['lint', 'scripts', 'less', 'concatCss', 'cssNano', 'inject', 'serve']);
 
 function prepareTemplates() {
 

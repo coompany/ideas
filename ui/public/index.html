@@ -1,51 +1,23 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="ideasUiApp">
-<head>
+<base href="/">
     <meta charset="UTF-8">
-    <title>Hello Angular TypeScript!</title>
-
-    <!-- bower:css -->
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.css"/>
-    <!-- endbower -->
+    <title>Ideas app</title>
 
     <!-- inject:css -->
     <link rel="stylesheet" href="/dist/app.css">
     <!-- endinject -->
 
-    <style>
-        body {
-            padding-top: 50px;
-        }
-
-        .starter-template {
-            padding: 40px 15px;
-            text-align: center;
-        }
-    </style>
-
-    <!--[if lt IE 9]>
-    <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
 </head>
 <body>
 
-<div class="container">
-
-    <div class="starter-template">
-        <h1>ideas-ui has been scaffolded, yo!</h1>
-        <p class="lead">With layouts and styling by bootstrap</p>
-
-        <demo></demo>
-
-    </div>
-
-</div>
+<main class="container" ui-view></main>
 
 <!-- bower:js -->
 <script src="lib/jquery/dist/jquery.js"></script>
 <script src="lib/bootstrap/dist/js/bootstrap.js"></script>
 <script src="lib/angular/angular.js"></script>
+<script src="lib/angular-ui-router/release/angular-ui-router.js"></script>
 <!-- endbower -->
 
 <!-- inject:js -->
