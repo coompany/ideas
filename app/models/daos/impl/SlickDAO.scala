@@ -51,7 +51,7 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
 
 
     // API Access Token table
-    case class DBAccessToken(id: Long, userId: Long, token: String, refreshToken: Option[String], expiresIn: Long,
+    case class DBAccessToken(id: Long, userId: Long, token: String, refreshToken: Option[String], expiresIn: Timestamp,
                              clientId: String, scope: Option[String], createdAt: Timestamp)
 
     protected class AccessTokenTable(tag: Tag) extends Table[DBAccessToken](tag, "api_access_token") {
@@ -59,7 +59,7 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
         def userId = column[Long]("user_id")
         def token = column[String]("token")
         def refreshToken = column[Option[String]]("refresh_token")
-        def expiresIn = column[Long]("expires_in")
+        def expiresIn = column[Timestamp]("expires_in")
         def clientId = column[String]("client_id")
         def scope = column[Option[String]]("scope")
         def createdAt = column[Timestamp]("created_at")
@@ -105,7 +105,7 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
         token = dbAccessToken.token,
         refreshToken = dbAccessToken.refreshToken,
         scope = dbAccessToken.scope,
-        lifeSeconds = Some(dbAccessToken.expiresIn),
+        lifeSeconds = Some((dbAccessToken.expiresIn.getTime - dbAccessToken.createdAt.getTime) / 1000),
         createdAt = new DateTime(dbAccessToken.createdAt).toDate,
         params = Map()
     )
@@ -130,5 +130,8 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
     protected def findUserByEmail(email: String) = UsersQuery.filter(_.email === email).result.headOption
 
     protected def findPasswordInfoByUserId(userId: Long) = PasswordInfoQuery.filter(_.userId === userId).result.headOption
+
+    protected def filterAccessTokensNotExpired(dbAccessToken: AccessTokenTable) =
+        dbAccessToken.createdAt < dbAccessToken.expiresIn
 
 }

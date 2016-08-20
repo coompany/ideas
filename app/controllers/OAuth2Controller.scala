@@ -37,7 +37,7 @@ class OAuth2Controller @Inject() (
             case Right(r) =>
                 r.authInfo.redirectUri match {
                     case Some(uri) if request.grantType == OAuthGrantType.IMPLICIT =>
-                        Redirect(uri + "#" + r.accessToken)
+                        Redirect(s"$uri#token=${r.accessToken}")
                     case _ =>
                         Ok(Json.toJson(responseAccessToken(r))).withHeaders("Cache-Control" -> "no-store", "Pragma" -> "no-cache")
                 }

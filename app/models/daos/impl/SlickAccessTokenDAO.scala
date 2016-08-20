@@ -17,9 +17,10 @@ class SlickAccessTokenDAO @Inject() (protected val dbConfigProvider: DatabaseCon
     import driver.api._
 
     override def save(authInfo: AuthInfo[User], accessToken: AccessToken): Future[AccessToken] = {
-        val dbAccessToken = DBAccessToken(0, authInfo.user.id, accessToken.token, accessToken.refreshToken,
-            accessToken.expiresIn.getOrElse(0), authInfo.clientId.getOrElse(""), authInfo.scope,
-            new Timestamp(accessToken.createdAt.getTime))
+        val dbAccessToken = DBAccessToken(
+            0, authInfo.user.id, accessToken.token, accessToken.refreshToken,
+            new Timestamp(accessToken.createdAt.getTime + (accessToken.expiresIn.get * 1000L)),
+            authInfo.clientId.get, authInfo.scope, new Timestamp(accessToken.createdAt.getTime))
 
         val action = for {
             token <- (AccessTokenQuery returning AccessTokenQuery).insertOrUpdate(dbAccessToken)
@@ -31,7 +32,7 @@ class SlickAccessTokenDAO @Inject() (protected val dbConfigProvider: DatabaseCon
     override def find(authInfo: AuthInfo[User]): Future[Option[AccessToken]] = {
         val query = for {
             user <- UsersQuery if user.id === authInfo.user.id
-            token <- AccessTokenQuery if token.userId === user.id
+            token <- AccessTokenQuery if token.userId === user.id  && filterAccessTokensNotExpired(token)
         } yield token
 
         db.run(query.result.headOption) map {
@@ -41,7 +42,7 @@ class SlickAccessTokenDAO @Inject() (protected val dbConfigProvider: DatabaseCon
     }
 
     override def find(token: String): Future[Option[AccessToken]] = {
-        val query = AccessTokenQuery.filter(_.token === token)
+        val query = AccessTokenQuery.filter(t => t.token === token && filterAccessTokensNotExpired(t))
 
         db.run(query.result.headOption) map {
             case Some(accessToken) => Some(accessToken)
@@ -51,7 +52,7 @@ class SlickAccessTokenDAO @Inject() (protected val dbConfigProvider: DatabaseCon
 
     override def find(accessToken: AccessToken): Future[Option[AuthInfo[User]]] = {
         val query = for {
-            at <- AccessTokenQuery if at.token === accessToken.token
+            at <- AccessTokenQuery if at.token === accessToken.token && filterAccessTokensNotExpired(at)
             user <- UsersQuery if user.id === at.userId
         } yield (at, user)
 
