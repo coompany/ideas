@@ -1,10 +1,8 @@
 package auth
 
 import java.security.SecureRandom
-import java.util.Base64
 import javax.inject.Inject
 
-import com.google.inject.assistedinject.Assisted
 import models.User
 import models.daos.AccessTokenDAO
 import org.joda.time.DateTime
