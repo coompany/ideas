@@ -12,12 +12,14 @@ module app.ideas {
         description: string
         creator: IUser
         createdAt: Date
+        votes: number
     }
     class Idea implements IIdea {
-        id: number = null;
-        description: string = null;
-        creator: IUser = null;
-        createdAt: Date = null;
+        id: number;
+        description: string;
+        creator: IUser;
+        createdAt: Date;
+        votes: number;
     }
 
 

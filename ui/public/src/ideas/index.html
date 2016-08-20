@@ -1,8 +1,25 @@
 <div ng-if="ideas.ideas.length > 0">
     <div class="row" ng-repeat="idea in ideas.ideas">
         <div class="col-xs-12">
-            <p class="lead">{{ idea.description }}</p>
-            <blockquote>{{ idea.creator.email }}</blockquote>
+            <div class="row">
+                <div class="col-xs-12">
+                    <p class="lead">{{ idea.description }}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <blockquote>
+                        <div class="row">
+                            <div class="col-xs-3">
+                                {{ idea.votes }} votes!
+                            </div>
+                            <div class="col-xs-9">
+                                {{ idea.creator.email }}
+                            </div>
+                        </div>
+                    </blockquote>
+                </div>
+            </div>
         </div>
     </div>
 </div>
