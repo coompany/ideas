@@ -1,68 +1,76 @@
 /// <reference path="../../../typings/index.d.ts" />
 
+import IHttpPromise = angular.IHttpPromise;
 var app = angular.module('ideasUiApp', [
     'app.templates',
     'ui.router'
 ]);
 
 
-class User {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
+interface IAppRootScope extends ng.IRootScopeService {
+    loginUrl: string
+    token: string
+    user: IUser
+}
 
-    fullName(): string {
-        return `${this.firstName} ${this.lastName}`
-    }
+
+interface IUser {
+    id: number
+    firstName: string
+    lastName: string
+    email: string
 }
 
 
 class AppCtrl {
 
-    user: User = null;
-    loginUrl = 'http://localhost:9000/oauth2/access_token?grant_type=implicit&client_id=123&redirect_uri=http://localhost:3000/oauth/';
-    token: string = null;
-
     constructor(private $log: ng.ILogService,
                 private $state: angular.ui.IStateService,
                 private $location: ng.ILocationService,
-                private $rootScope: ng.IRootScopeService) {
+                private appScope: IAppRootScope,
+                private $http: ng.IHttpService) {
         $log.info('AppCtrl started');
 
-        this.checkToken();
-        $rootScope.$on('oauthTokenUpdated', this.checkToken)
+        this.appScope.loginUrl = 'http://localhost:9000/oauth2/access_token?grant_type=implicit&client_id=123&redirect_uri=http://localhost:3000/oauth/';
+
+        if ($state.current.name != 'app.oauth') {
+            this.checkToken();
+        }
     }
 
     checkToken() {
         let token = localStorage.getItem('oauth.token');
         if (token) {
-            this.token = token;
-            this.$log.debug(`Retrieved token: ${this.token}`)
+            this.appScope.token = token;
+            this.$log.debug(`Retrieved token: ${token}`);
+            this.$http.defaults.headers.common.Authorization = `Bearer ${token}`;
+            this.$http.get('http://localhost:9000/api/me').then((user) => {
+                this.appScope.user = user.data;
+            })
         }
     }
 
 }
 
-app.controller('AppCtrl', ['$log', '$state', '$location', '$rootScope', AppCtrl]);
+app.controller('AppCtrl', ['$log', '$state', '$location', '$rootScope', '$http', AppCtrl]);
 
 
 class OAuthCtrl {
-    constructor($location: ng.ILocationService, $state: angular.ui.IStateService, $scope: ng.IScope) {
-        let token = $location.hash();
+    constructor($location: ng.ILocationService, $state: angular.ui.IStateService) {
+        let token = $location.hash().split('token=')[1];
         localStorage.setItem('oauth.token', token);
-        $scope.$emit('oauthTokenUpdated');
-        $state.go('app.index')
+        $state.go('app.index', {}, { reload: true })
     }
 }
 
-app.controller('OAuthCtrl', ['$location', '$state', '$scope', OAuthCtrl]);
+app.controller('OAuthCtrl', ['$location', '$state', OAuthCtrl]);
 
 
-app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', (
+app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', '$httpProvider', (
     $stateProvider: angular.ui.IStateProvider,
     $urlRouterProvider: angular.ui.IUrlRouterProvider,
-    $locationProvider: ng.ILocationProvider) => {
+    $locationProvider: ng.ILocationProvider,
+    $httpProvider: ng.IHttpProvider) => {
 
         $locationProvider.html5Mode(true);
 
@@ -82,7 +90,19 @@ app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', (
             .state('app.index', {
                 url: '/',
                 templateUrl: 'app-templates/index/index.html'
-            })
+            });
+
+
+        $httpProvider.interceptors.push(['$q', '$window', '$rootScope',
+            ($q: ng.IQService, $window: ng.IWindowService, $rootScope: IAppRootScope) => {
+                return {
+                    'responseError': (response) => {
+                        console.debug(response);
+                        $window.location.href = $rootScope.loginUrl;
+                        return $q.reject(response);
+                    }
+                }
+        }]);
 
     }
 ]);
