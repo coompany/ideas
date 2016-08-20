@@ -9,7 +9,8 @@ import models.services.IdeaService
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.Controller
+import play.mvc.Http.MimeTypes
 
 import scala.concurrent.Future
 
@@ -50,6 +51,13 @@ class IdeasController @Inject() (
                     }
                 )
             case None => Future.successful(BadRequest(""))
+        }
+    }
+
+    def vote(ideaId: Long) = AuthorizedAction(dataHandler).async { implicit request =>
+        ideaService.vote(ideaId, request.authInfo.user) map {
+            case Some(idea) => Ok(Json.toJson(idea))
+            case _ => BadRequest("").as(MimeTypes.JSON)
         }
     }
 

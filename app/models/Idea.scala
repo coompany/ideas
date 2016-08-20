@@ -6,4 +6,5 @@ import org.joda.time.DateTime
 case class Idea(id: Long,
                 description: String,
                 creator: User,
-                createdAt: DateTime)
+                createdAt: DateTime,
+                votes: Int = 0)

@@ -50,6 +50,21 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
 
 
 
+    // Votes table
+    case class DBVote(userId: Long, ideaId: Long, createdAt: Timestamp)
+
+    protected class VotesTable(tag: Tag) extends Table[DBVote](tag, "vote") {
+        def userId = column[Long]("user_id")
+        def ideaId = column[Long]("idea_id")
+        def createdAt = column[Timestamp]("created_at")
+        override def * = (userId, ideaId, createdAt) <> (DBVote.tupled, DBVote.unapply)
+        def pk = primaryKey("vote_pkey", (userId, ideaId))
+    }
+
+    val VotesQuery = TableQuery[VotesTable]
+
+
+
     // API Access Token table
     case class DBAccessToken(id: Long, userId: Long, token: String, refreshToken: Option[String], expiresIn: Timestamp,
                              clientId: String, scope: Option[String], createdAt: Timestamp)
@@ -87,6 +102,8 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
 
 
     // Implicit conversions
+    implicit def dateTimeToTimestamp(dateTime: DateTime): Timestamp = new Timestamp(dateTime.getMillis)
+
     implicit def dbUserToUser(dbUser: DBUser): User = User(
         id = dbUser.id,
         firstName = dbUser.firstName,
@@ -133,5 +150,9 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
 
     protected def filterAccessTokensNotExpired(dbAccessToken: AccessTokenTable) =
          dbAccessToken.expiresIn >= new Timestamp(DateTime.now().getMillis)
+
+    protected def findIdeaById(ideaId: Rep[Long]) = IdeasQuery.filter(_.id === ideaId).result.headOption
+
+    protected def countVotesForIdea(ideaId: Rep[Long]) = VotesQuery.filter(_.ideaId === ideaId).countDistinct
 
 }

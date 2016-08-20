@@ -26,7 +26,8 @@ package object models {
             "id" -> o.id,
             "description" -> o.description,
             "creator" -> o.creator,
-            "createdAt" -> o.createdAt
+            "createdAt" -> o.createdAt,
+            "votes" -> o.votes
         )
     }
 
@@ -34,7 +35,8 @@ package object models {
         (JsPath \ "id").read[Long] and
             (JsPath \ "description").read[String] and
             (JsPath \ "creator").read[User] and
-            (JsPath \ "createdAt").read[DateTime]
+            (JsPath \ "createdAt").read[DateTime] and
+            (JsPath \ "votes").read[Int]
         )(Idea.apply _)
 
 }

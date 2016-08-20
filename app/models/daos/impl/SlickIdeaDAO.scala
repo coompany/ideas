@@ -3,8 +3,8 @@ package models.daos.impl
 import java.sql.Timestamp
 import javax.inject.Inject
 
-import models.Idea
 import models.daos.IdeaDAO
+import models.{Idea, User}
 import org.joda.time.DateTime
 import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.concurrent.Execution.Implicits._
@@ -17,15 +17,12 @@ class SlickIdeaDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProv
     import driver.api._
 
     override def all: Future[Seq[Idea]] = {
-        val query = for {
-            idea <- IdeasQuery.sortBy(_.createdAt)
-            creator <- UsersQuery if creator.id === idea.creatorId
-        } yield (idea, creator)
+        val query = IdeasQuery.sortBy(_.createdAt).join(UsersQuery).on(_.creatorId === _.id).map {
+            case (idea, creator) => (idea, creator, countVotesForIdea(idea.id))
+        }.result
 
-        db.run(query.result) map { rows =>
-            rows map {
-                case (idea, creator) => Idea(idea.id, idea.description, creator, new DateTime(idea.createdAt))
-            }
+        db.run(query) map { rows =>
+            rows map { case (idea, user, votes) => dbIdeaToIdea(idea, user).copy(votes = votes) }
         }
     }
 
@@ -48,6 +45,23 @@ class SlickIdeaDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProv
 
         db.run(actions) map {
             case (user, newIdea) => dbIdeaToIdea(newIdea.get, user)
+        }
+    }
+
+    override def vote(ideaId: Long, user: User): Future[Option[Idea]] = {
+        def ins(dbIdea: DBIdea) = for {
+            _ <- VotesQuery += DBVote(user.id, ideaId, DateTime.now())
+            votes <- countVotesForIdea(ideaId).result
+        } yield (dbIdea, votes)
+
+        val action = findIdeaById(ideaId).flatMap {
+            case Some(i) => ins(i).map(Some(_))
+            case _ => DBIO.successful(None)
+        }
+
+        db.run(action).map {
+            case Some((idea, votes)) => Some(dbIdeaToIdea(idea, user).copy(votes = votes))
+            case _ => None
         }
     }
 

@@ -13,6 +13,7 @@ GET     /oauth2/access_token        controllers.OAuth2Controller.accessToken
 
 GET     /api/ideas                  controllers.api.IdeasController.index
 POST    /api/ideas                  controllers.api.IdeasController.create
+POST    /api/ideas/:id              controllers.api.IdeasController.vote(id: Long)
 GET     /api/me                     controllers.api.UserController.me
 
 # Map static resources from the /public folder to the /assets URL path
