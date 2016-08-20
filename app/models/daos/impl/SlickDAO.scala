@@ -132,6 +132,6 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
     protected def findPasswordInfoByUserId(userId: Long) = PasswordInfoQuery.filter(_.userId === userId).result.headOption
 
     protected def filterAccessTokensNotExpired(dbAccessToken: AccessTokenTable) =
-        dbAccessToken.createdAt < dbAccessToken.expiresIn
+         dbAccessToken.expiresIn >= new Timestamp(DateTime.now().getMillis)
 
 }
