@@ -57,7 +57,29 @@ class SlickAccessTokenDAO @Inject() (protected val dbConfigProvider: DatabaseCon
 
         db.run(query.result.headOption) map {
             case Some((at, user)) => Some(AuthInfo[User](user, Some(at.clientId), at.scope, None))
+            case _ => None
         }
+    }
+
+    override def findByRefreshToken(refreshToken: String): Future[Option[AuthInfo[User]]] = {
+        val query = for {
+            at <- AccessTokenQuery if at.refreshToken === refreshToken
+            user <- UsersQuery if user.id === at.userId
+        } yield (at, user)
+
+        db.run(query.result.headOption) map {
+            case Some((at, user)) => Some(AuthInfo[User](user, Some(at.clientId), at.scope, None))
+            case _ => None
+        }
+    }
+
+    override def delete(authInfo: AuthInfo[User]): Future[Unit] = {
+        val action = for {
+            user <- findUserById(authInfo.user)
+            _ <- AccessTokenQuery.filter(_.userId === user.get.id).delete
+        } yield ()
+
+        db run action
     }
 
 }

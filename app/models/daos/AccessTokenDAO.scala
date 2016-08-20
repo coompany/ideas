@@ -12,5 +12,7 @@ trait AccessTokenDAO {
     def find(authInfo: AuthInfo[User]): Future[Option[AccessToken]]
     def find(token: String): Future[Option[AccessToken]]
     def find(accessToken: AccessToken): Future[Option[AuthInfo[User]]]
+    def findByRefreshToken(refreshToken: String): Future[Option[AuthInfo[User]]]
+    def delete(authInfo: AuthInfo[User]): Future[Unit]
 
 }

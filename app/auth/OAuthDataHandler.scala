@@ -25,7 +25,8 @@ class OAuthDataHandlerImpl @Inject() (
 
     val accessTokenExpire = Some(config.getMilliseconds("oauth2.tokenExpire").getOrElse(60 * 60L * 1000) / 1000)
 
-    override def findAuthInfoByAccessToken(accessToken: AccessToken): Future[Option[AuthInfo[User]]] = accessTokenDAO.find(accessToken)
+    override def findAuthInfoByAccessToken(accessToken: AccessToken): Future[Option[AuthInfo[User]]] =
+        accessTokenDAO.find(accessToken)
 
     override def findAccessToken(token: String): Future[Option[AccessToken]] = accessTokenDAO.find(token)
 
@@ -44,15 +45,21 @@ class OAuthDataHandlerImpl @Inject() (
         Future.successful(tokenObject)
     }
 
-    override def getStoredAccessToken(authInfo: AuthInfo[User]): Future[Option[AccessToken]] = accessTokenDAO.find(authInfo)
+    override def getStoredAccessToken(authInfo: AuthInfo[User]): Future[Option[AccessToken]] =
+        accessTokenDAO.find(authInfo)
 
-    override def refreshAccessToken(authInfo: AuthInfo[User], refreshToken: String): Future[AccessToken] = ???
+    override def refreshAccessToken(authInfo: AuthInfo[User], refreshToken: String): Future[AccessToken] = {
+        accessTokenDAO.delete(authInfo)
+        createAccessToken(authInfo)
+    }
 
-    override def findAuthInfoByCode(code: String): Future[Option[AuthInfo[User]]] = ???
+    override def findAuthInfoByCode(code: String): Future[Option[AuthInfo[User]]] =
+        Future.failed(new NotImplementedError())
 
     override def deleteAuthCode(code: String): Future[Unit] = Future.failed(new NotImplementedError())
 
-    override def findAuthInfoByRefreshToken(refreshToken: String): Future[Option[AuthInfo[User]]] = ???
+    override def findAuthInfoByRefreshToken(refreshToken: String): Future[Option[AuthInfo[User]]] =
+        accessTokenDAO.findByRefreshToken(refreshToken)
 
 
     private def generateToken(length: Int = 256): String = BigInt(length, secureRandom).toString(32)

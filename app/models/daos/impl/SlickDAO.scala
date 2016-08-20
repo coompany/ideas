@@ -126,6 +126,7 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
 
 
     // common queries
+    protected def findUserById(user: User) = UsersQuery.filter(_.id === user.id).result.headOption
     protected def findUserByEmail(email: String) = UsersQuery.filter(_.email === email).result.headOption
 
     protected def findPasswordInfoByUserId(userId: Long) = PasswordInfoQuery.filter(_.userId === userId).result.headOption
