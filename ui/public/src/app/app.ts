@@ -1,6 +1,5 @@
 /// <reference path="../../../typings/index.d.ts" />
 
-import IHttpPromise = angular.IHttpPromise;
 var app = angular.module('ideasUiApp', [
     'app.templates',
     'ui.router'
@@ -43,7 +42,7 @@ class AppCtrl {
             this.appScope.token = token;
             this.$log.debug(`Retrieved token: ${token}`);
             this.$http.defaults.headers.common.Authorization = `Bearer ${token}`;
-            this.$http.get('http://localhost:9000/api/me').then((user) => {
+            this.$http.get('http://localhost:9000/api/me').then((user: ng.IHttpPromiseCallbackArg<IUser>) => {
                 this.appScope.user = user.data;
             })
         }
@@ -95,7 +94,7 @@ app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', '$httpP
         $httpProvider.interceptors.push(['$q', '$window', '$rootScope',
             ($q: ng.IQService, $window: ng.IWindowService, appScope: IAppRootScope) => {
                 return {
-                    'responseError': (response) => {
+                    'responseError': <T>(response: ng.IHttpPromiseCallbackArg<T>) => {
                         if (response.status === 401) {
                             $window.location.href = appScope.loginUrl;
                         }
