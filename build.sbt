@@ -12,6 +12,7 @@ val webJars = Seq(
 )
 
 libraryDependencies ++= webJars ++ Seq(
+    filters,
     "com.mohiva" %% "play-silhouette" % "4.0.0",
     "com.mohiva" %% "play-silhouette-crypto-jca" % "4.0.0",
     "com.mohiva" %% "play-silhouette-password-bcrypt" % "4.0.0",
