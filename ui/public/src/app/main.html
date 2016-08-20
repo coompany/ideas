@@ -15,14 +15,20 @@
                 <li><a>Something</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li ng-if="app.appScope.token == null">
+                <li ng-if="app.appScope.user == null">
                     <a ng-href="{{ app.appScope.loginUrl }}">Login</a>
                 </li>
-                <li ng-if="app.appScope.token != null">
+                <li ng-if="app.appScope.user != null">
                     <a>{{ app.appScope.user.email }}</a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
-<div class="container" ui-view></div>
+
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="container-fluid" ui-view></div>
+    </div>
+</div>

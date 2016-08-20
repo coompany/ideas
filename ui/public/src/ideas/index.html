@@ -1,0 +1,22 @@
+<div ng-if="ideas.ideas.length > 0">
+    <div class="row" ng-repeat="idea in ideas.ideas">
+        <div class="col-xs-12">
+            <p class="lead">{{ idea.description }}</p>
+            <blockquote>{{ idea.creator.email }}</blockquote>
+        </div>
+    </div>
+</div>
+
+<div ng-if="ideas.ideas.length == 0">
+    <div class="row">
+        <div class="col-xs-12">
+            <p class="lead">No ideas to show...</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <a class="btn btn-default pull-right" ui-sref="app.new">New idea</a>
+    </div>
+</div>
