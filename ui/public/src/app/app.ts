@@ -29,7 +29,6 @@ class AppCtrl {
                 private $location: ng.ILocationService,
                 private appScope: IAppRootScope,
                 private $http: ng.IHttpService) {
-        $log.info('AppCtrl started');
 
         this.appScope.loginUrl = 'http://localhost:9000/oauth2/access_token?grant_type=implicit&client_id=123&redirect_uri=http://localhost:3000/oauth/';
 
@@ -94,11 +93,12 @@ app.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', '$httpP
 
 
         $httpProvider.interceptors.push(['$q', '$window', '$rootScope',
-            ($q: ng.IQService, $window: ng.IWindowService, $rootScope: IAppRootScope) => {
+            ($q: ng.IQService, $window: ng.IWindowService, appScope: IAppRootScope) => {
                 return {
                     'responseError': (response) => {
-                        console.debug(response);
-                        $window.location.href = $rootScope.loginUrl;
+                        if (response.status === 401) {
+                            $window.location.href = appScope.loginUrl;
+                        }
                         return $q.reject(response);
                     }
                 }
