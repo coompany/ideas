@@ -1,6 +1,7 @@
 package models.daos.impl
 
 import java.sql.Timestamp
+import java.util.Date
 
 import com.mohiva.play.silhouette.api.util.PasswordInfo
 import models.{Idea, User}
@@ -103,6 +104,8 @@ trait SlickDAO extends HasDatabaseConfigProvider[JdbcProfile] {
 
     // Implicit conversions
     implicit def dateTimeToTimestamp(dateTime: DateTime): Timestamp = new Timestamp(dateTime.getMillis)
+    implicit def dateToTimestamp(date: Date): Timestamp = new Timestamp(date.getTime)
+    implicit def longToTimestamp(long: Long): Timestamp = new Timestamp(long)
 
     implicit def dbUserToUser(dbUser: DBUser): User = User(
         id = dbUser.id,

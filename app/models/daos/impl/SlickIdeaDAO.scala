@@ -1,6 +1,5 @@
 package models.daos.impl
 
-import java.sql.Timestamp
 import javax.inject.Inject
 
 import models.daos.IdeaDAO
@@ -31,7 +30,7 @@ class SlickIdeaDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProv
             id = idea.id,
             description = idea.description,
             creatorId = idea.creator.id,
-            createdAt = new Timestamp(idea.createdAt.getMillis)
+            createdAt = idea.createdAt
         )
 
         val selectCreator = UsersQuery filter (_.id === idea.creator.id)

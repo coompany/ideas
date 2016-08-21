@@ -1,6 +1,5 @@
 package models.daos.impl
 
-import java.sql.Timestamp
 import javax.inject.Inject
 
 import models.User
@@ -19,8 +18,8 @@ class SlickAccessTokenDAO @Inject() (protected val dbConfigProvider: DatabaseCon
     override def save(authInfo: AuthInfo[User], accessToken: AccessToken): Future[AccessToken] = {
         val dbAccessToken = DBAccessToken(
             0, authInfo.user.id, accessToken.token, accessToken.refreshToken,
-            new Timestamp(accessToken.createdAt.getTime + (accessToken.expiresIn.get * 1000L)),
-            authInfo.clientId.get, authInfo.scope, new Timestamp(accessToken.createdAt.getTime))
+            accessToken.createdAt.getTime + (accessToken.expiresIn.get * 1000L),
+            authInfo.clientId.get, authInfo.scope, accessToken.createdAt)
 
         val action = for {
             token <- (AccessTokenQuery returning AccessTokenQuery).insertOrUpdate(dbAccessToken)
