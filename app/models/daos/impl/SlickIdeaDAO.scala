@@ -17,12 +17,12 @@ class SlickIdeaDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProv
     import driver.api._
 
     override def all: Future[Seq[Idea]] = {
-        val query = IdeasQuery.sortBy(_.createdAt).join(UsersQuery).on(_.creatorId === _.id).map {
+        val query = IdeasQuery sortBy (_.createdAt) join UsersQuery on (_.creatorId === _.id) map {
             case (idea, creator) => (idea, creator, countVotesForIdea(idea.id))
-        }.result
+        }
 
-        db.run(query) map { rows =>
-            rows map { case (idea, user, votes) => dbIdeaToIdea(idea, user).copy(votes = votes) }
+        db run query.result map { rows =>
+            rows map { case (idea, user, votes) => dbIdeaToIdea(idea, user) copy (votes = votes) }
         }
     }
 
@@ -34,33 +34,31 @@ class SlickIdeaDAO @Inject() (protected val dbConfigProvider: DatabaseConfigProv
             createdAt = new Timestamp(idea.createdAt.getMillis)
         )
 
-        val selectCreator = UsersQuery.filter(_.id === idea.creator.id)
+        val selectCreator = UsersQuery filter (_.id === idea.creator.id)
 
-        val insIdea = (IdeasQuery returning IdeasQuery.map(_.id) into ((idea, id) => idea.copy(id = id))).insertOrUpdate(dbIdea)
+        val insIdea = IdeasQuery returning IdeasQuery.map(_.id) into ((idea, id) => idea copy (id = id)) insertOrUpdate dbIdea
 
         val actions = for {
             user <- selectCreator.result.head
             idea <- insIdea
         } yield (user, idea)
 
-        db.run(actions) map {
+        db run actions map {
             case (user, newIdea) => dbIdeaToIdea(newIdea.get, user)
         }
     }
 
     override def vote(ideaId: Long, user: User): Future[Option[Idea]] = {
-        def ins(dbIdea: DBIdea) = for {
-            _ <- VotesQuery += DBVote(user.id, ideaId, DateTime.now())
-            votes <- countVotesForIdea(ideaId).result
-        } yield (dbIdea, votes)
-
-        val action = findIdeaById(ideaId).flatMap {
-            case Some(i) => ins(i).map(Some(_))
-            case _ => DBIO.successful(None)
+        val action = findIdeaById(ideaId) flatMap {
+            case Some(idea) => for {
+                _ <- VotesQuery += DBVote(user.id, ideaId, DateTime.now())
+                votes <- countVotesForIdea(ideaId).result
+            } yield Some((idea, votes))
+            case _ => DBIO successful None
         }
 
-        db.run(action).map {
-            case Some((idea, votes)) => Some(dbIdeaToIdea(idea, user).copy(votes = votes))
+        db run action map {
+            case Some((idea, votes)) => Some(dbIdeaToIdea(idea, user) copy (votes = votes))
             case _ => None
         }
     }
